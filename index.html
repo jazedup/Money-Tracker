@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Analytics</title>
+    <title>PH Finance - Analytics & Yield Pool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        #modalOverlay, #deleteModalOverlay { transition: opacity 0.3s many; }
+        #modalOverlay, #deleteModalOverlay { transition: opacity 0.3s ease; }
         .action-btn { opacity: 0; transition: opacity 0.2s; }
         tr:hover .action-btn { opacity: 1; }
         #syncBtn { min-width: 120px; justify-content: center; }
@@ -133,20 +135,20 @@
                     <div class="space-y-4">
                         <div>
                             <p class="text-[10px] text-slate-500 uppercase font-black">Max Investable Amount</p>
-                            <p id="poolMax" class="text-2xl font-mono text-white font-black">&#8369 0.00</p>
+                            <p id="poolMax" class="text-2xl font-mono text-white font-black">&#8369; 0.00</p>
                         </div>
                         <div class="space-y-2 pt-2 border-t border-slate-800">
                             <div class="flex justify-between text-xs">
                                 <span class="text-slate-400 flex items-center gap-1">(<input type="number" id="rateDigi" value="6" step="0.1" oninput="limitAndRefresh(this)" class="rate-input" style="width: 3ch;" disabled>%) Digital Banks </span>
-                                <span id="yieldDigi" class="font-mono text-emerald-500">+₱0.00</span>
+                                <span id="yieldDigi" class="font-mono text-emerald-500">+&#8369;0.00</span>
                             </div>
                             <div class="flex justify-between text-xs">
                                 <span class="text-slate-400 flex items-center gap-1">(<input type="number" id="rateMP2" value="7" step="0.1" oninput="limitAndRefresh(this)" class="rate-input" style="width: 3ch;" disabled>%) Pag-Ibig Mp2 </span>
-                                <span id="yieldMP2" class="font-mono text-emerald-500">+₱0.00</span>
+                                <span id="yieldMP2" class="font-mono text-emerald-500">+&#8369;0.00</span>
                             </div>
                             <div class="flex justify-between text-xs">
                                 <span class="text-slate-400 flex items-center gap-1">(<input type="number" id="rateStock" value="8" step="0.1" oninput="limitAndRefresh(this)" class="rate-input" style="width: 3ch;" disabled>%) Div. Stocks </span>
-                                <span id="yieldStock" class="font-mono text-emerald-500">+₱0.00</span>
+                                <span id="yieldStock" class="font-mono text-emerald-500">+&#8369;0.00</span>
                             </div>
                         </div>
                     </div>
@@ -157,18 +159,18 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 h-fit">
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
                         <p id="labelNet" class="text-[10px] text-slate-500 uppercase font-black">Net Cash (Total)</p>
-                        <p id="statNet" class="text-2xl font-mono text-white mt-1">₱0.00</p>
+                        <p id="statNet" class="text-2xl font-mono text-white mt-1">&#8369;0.00</p>
                     </div>
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
                         <div class="flex justify-between items-start">
                             <p id="labelExp" class="text-[10px] text-slate-500 uppercase font-black">Cash Flow</p>
                             <span id="yoYIndicator" class="text-[9px] font-bold px-2 py-0.5 rounded-full hidden cursor-help"></span>
                         </div>
-                        <p id="statExp" class="text-2xl font-mono text-white mt-1">₱0.00</p>
+                        <p id="statExp" class="text-2xl font-mono text-white mt-1">&#8369;0.00</p>
                     </div>
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg relative overflow-hidden">
                         <p id="labelPrev" class="text-[10px] text-slate-500 uppercase font-black">Prev Cash Flow</p>
-                        <p id="statPrevYear" class="text-2xl font-mono text-white mt-1">₱0.00</p>
+                        <p id="statPrevYear" class="text-2xl font-mono text-white mt-1">&#8369;0.00</p>
                     </div>
                 </div>
 
@@ -199,7 +201,8 @@
         let db = [];
         let chartInstance = null;
         let hasUnsavedChanges = false;
-        const phFormat = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
+        // Updated formatting to ensure "PHP" or symbol compatibility
+        const phFormat = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', currencyDisplay: 'symbol' });
 
         const DB_NAME = "FileStorage";
         const STORE_NAME = "handles";
@@ -242,7 +245,6 @@
             if (storedHandle) {
                 fileHandle = storedHandle;
                 try {
-                    // Browsers require a user gesture to prompt, so this handles background verification
                     const isPermitted = await fileHandle.queryPermission({mode: 'readwrite'}) === 'granted';
                     if (isPermitted) {
                         await loadFile();
@@ -338,7 +340,6 @@
             updateChart(cats);
         }
 
-        // Standard Utility Functions
         function formatInputAmount(input) {
             let value = input.value.replace(/[^0-9.]/g, '');
             const parts = value.split('.');
@@ -457,4 +458,3 @@
     </script>
 </body>
 </html>
-

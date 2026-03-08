@@ -11,8 +11,12 @@
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         #modalOverlay, #deleteModalOverlay { transition: opacity 0.3s ease; }
-        .action-btn { opacity: 1 !important; /* Force visible for mobile touch */ }
-        @media (min-width: 768px) { .action-btn { opacity: 0; transition: opacity 0.2s; } tr:hover .action-btn { opacity: 1; } }
+        /* Action buttons visible on mobile, hover on desktop */
+        .action-btn { opacity: 1 !important; }
+        @media (min-width: 768px) { 
+            .action-btn { opacity: 0; transition: opacity 0.2s; } 
+            tr:hover .action-btn { opacity: 1; } 
+        }
         #syncBtn { min-width: 120px; justify-content: center; }
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
@@ -20,17 +24,7 @@
             100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
         }
         .sync-warning { animation: pulse-red 2s infinite; }
-        select { cursor: pointer; padding-right: 2.5rem !important; }
-        .rate-input { 
-            background: transparent; 
-            border-bottom: 1px dashed #334155; 
-            text-align: center; 
-            outline: none; 
-            -moz-appearance: textfield;
-        }
-        .rate-input::-webkit-outer-spin-button,
-        .rate-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .rate-input:focus { border-bottom-color: #10b981; color: #10b981; }
+        .rate-input { background: transparent; border-bottom: 1px dashed #334155; text-align: center; outline: none; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 p-4 md:p-8">
@@ -70,7 +64,7 @@
                     <p id="statusText" class="text-red-500 text-xs font-mono uppercase italic">Disconnected</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button id="syncBtn" title="Saves changes" onclick="saveToDisk()" disabled class="bg-slate-800 text-slate-500 px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 border border-slate-700 transition-all">
+                    <button id="syncBtn" onclick="saveToDisk()" disabled class="bg-slate-800 text-slate-500 px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 border border-slate-700 transition-all">
                         <span>🔄</span> Sync 
                     </button>
                     <button id="connectBtn" onclick="openMasterFile()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold text-sm transition-all shadow-lg shadow-blue-900/20">
@@ -82,20 +76,16 @@
             <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800">
                 <div class="flex flex-col">
                     <label class="text-[10px] font-bold text-slate-500 mb-1 uppercase">Year</label>
-                    <select id="filterYear" onchange="updateUI()" class="bg-slate-800 border-none rounded-lg p-2 pr-7 text-sm text-white outline-none w-32 appearance-none">
-                    <option value="2026">2026</option>
-                    </select>
+                    <select id="filterYear" onchange="updateUI()" class="bg-slate-800 border-none rounded-lg p-2 text-sm text-white outline-none w-32"></select>
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[10px] font-bold text-slate-500 mb-1 uppercase">Month</label>
-                    <select id="filterMonth" onchange="updateUI()" class="bg-slate-800 border-none rounded-lg p-2 pr-8 text-sm text-white outline-none w-40 appearance-none">
-                    <option value="all">Full Year (All)</option>
-                    <option value="0">January</option><option value="1">February</option>
-                    <option value="2">March</option><option value="3">April</option>
-                    <option value="4">May</option><option value="5">June</option>
-                    <option value="6">July</option><option value="7">August</option>
-                    <option value="8">September</option><option value="9">October</option>
-                    <option value="10">November</option><option value="11">December</option>
+                    <select id="filterMonth" onchange="updateUI()" class="bg-slate-800 border-none rounded-lg p-2 text-sm text-white outline-none w-40">
+                        <option value="all">Full Year (All)</option>
+                        <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                        <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                        <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                        <option value="9">October</option><option value="10">November</option><option value="11">December</option>
                     </select>
                 </div>
             </div>
@@ -108,12 +98,9 @@
                     <form id="txForm" class="space-y-4">
                         <input type="hidden" id="editIndex" value="-1">
                         <input type="date" id="date" required class="w-full bg-slate-800 border-none rounded-lg p-3 text-sm text-white outline-none">
-                        <select id="category" required onchange="handleCategoryChange(this)" class="w-full bg-slate-800 border-none rounded-lg p-3 text-sm text-white outline-none appearance-none">
-                            <option value="" disabled selected>Select Category</option>
-                            <option value="NEW_CAT" class="text-emerald-500 font-bold">+ Add New Category</option>
-                        </select>
+                        <select id="category" required onchange="handleCategoryChange(this)" class="w-full bg-slate-800 border-none rounded-lg p-3 text-sm text-white outline-none"></select>
                         <input type="text" id="amount" placeholder="Amount" required oninput="formatInputAmount(this)" class="w-full bg-slate-800 border-none rounded-lg p-3 text-sm text-white outline-none font-mono">
-                        <select id="type" class="w-full bg-slate-800 border-none rounded-lg p-3 text-sm text-white outline-none appearance-none">
+                        <select id="type" class="w-full bg-slate-800 border-none rounded-lg p-3 text-sm text-white outline-none">
                             <option value="Expense">Expense</option>
                             <option value="Income">Income</option>
                         </select>
@@ -124,15 +111,12 @@
 
                 <section class="bg-slate-900 p-6 rounded-2xl border border-emerald-900/30 bg-gradient-to-b from-slate-900 to-emerald-950/20 shadow-2xl flex-grow">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xl">📈</span>
-                            <h2 class="text-lg font-black text-emerald-400 tracking-tight uppercase">Yield Pool</h2>
-                        </div>
-                        <button onclick="toggleRateEdit()" id="rateEditBtn" class="text-[10px] font-bold text-slate-500 hover:text-emerald-500 transition-colors uppercase">Edit Rates</button>
+                        <h2 class="text-lg font-black text-emerald-400 uppercase">Yield Pool</h2>
+                        <button onclick="toggleRateEdit()" id="rateEditBtn" class="text-[10px] font-bold text-slate-500 uppercase">Edit Rates</button>
                     </div>
                     <div class="space-y-4">
                         <div>
-                            <p class="text-[10px] text-slate-500 uppercase font-black">Max Investable Amount</p>
+                            <p class="text-[10px] text-slate-500 uppercase">Max Investable</p>
                             <p id="poolMax" class="text-2xl font-mono text-white font-black">₱ 0.00</p>
                         </div>
                         <div class="space-y-2 pt-2 border-t border-slate-800">
@@ -141,12 +125,8 @@
                                 <span id="yieldDigi" class="font-mono text-emerald-500">+₱ 0.00</span>
                             </div>
                             <div class="flex justify-between text-xs">
-                                <span class="text-slate-400 flex items-center gap-1">(<input type="number" id="rateMP2" value="7" step="0.1" oninput="limitAndRefresh(this)" class="rate-input" style="width: 3ch;" disabled>%) Pag-Ibig Mp2 </span>
+                                <span class="text-slate-400 flex items-center gap-1">(<input type="number" id="rateMP2" value="7" step="0.1" oninput="limitAndRefresh(this)" class="rate-input" style="width: 3ch;" disabled>%) MP2 </span>
                                 <span id="yieldMP2" class="font-mono text-emerald-500">+₱ 0.00</span>
-                            </div>
-                            <div class="flex justify-between text-xs">
-                                <span class="text-slate-400 flex items-center gap-1">(<input type="number" id="rateStock" value="8" step="0.1" oninput="limitAndRefresh(this)" class="rate-input" style="width: 3ch;" disabled>%) Div. Stocks </span>
-                                <span id="yieldStock" class="font-mono text-emerald-500">+₱ 0.00</span>
                             </div>
                         </div>
                     </div>
@@ -156,25 +136,22 @@
             <div class="lg:col-span-3 flex flex-col gap-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 h-fit">
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
-                        <p id="labelNet" class="text-[10px] text-slate-500 uppercase font-black">Net Cash (Total)</p>
+                        <p id="labelNet" class="text-[10px] text-slate-500 uppercase font-black">Net Cash</p>
                         <p id="statNet" class="text-2xl font-mono text-white mt-1">₱ 0.00</p>
                     </div>
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
-                        <div class="flex justify-between items-start">
-                            <p id="labelExp" class="text-[10px] text-slate-500 uppercase font-black">Cash Flow</p>
-                            <span id="yoYIndicator" class="text-[9px] font-bold px-2 py-0.5 rounded-full hidden cursor-help"></span>
-                        </div>
+                        <p id="labelExp" class="text-[10px] text-slate-500 uppercase font-black">Cash Flow</p>
                         <p id="statExp" class="text-2xl font-mono text-white mt-1">₱ 0.00</p>
                     </div>
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg relative overflow-hidden">
-                        <p id="labelPrev" class="text-[10px] text-slate-500 uppercase font-black">Prev Cash Flow</p>
+                        <p id="labelPrev" class="text-[10px] text-slate-500 uppercase font-black">Prev Year</p>
                         <p id="statPrevYear" class="text-2xl font-mono text-white mt-1">₱ 0.00</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
                     <div class="bg-slate-900 rounded-2xl border border-slate-800 flex flex-col shadow-xl overflow-hidden h-full">
-                        <div class="p-3 bg-slate-800/30 text-[10px] font-black tracking-widest uppercase">Finance History</div>
+                        <div class="p-3 bg-slate-800/30 text-[10px] font-black uppercase">Finance History</div>
                         <div class="overflow-y-auto custom-scrollbar flex-grow">
                             <table class="w-full text-xs text-left">
                                 <tbody id="tableBody"></tbody>
@@ -182,7 +159,7 @@
                         </div>
                     </div>
                     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col shadow-xl h-full">
-                        <div class="text-[10px] font-black tracking-widest uppercase text-slate-500 mb-4">Expense Distribution</div>
+                        <div class="text-[10px] font-black uppercase text-slate-500 mb-4">Expense Distribution</div>
                         <div class="flex-grow flex items-center justify-center min-h-0">
                             <canvas id="mainChart"></canvas>
                         </div>
@@ -197,13 +174,11 @@
         let db = [];
         let chartInstance = null;
         let hasUnsavedChanges = false;
-        // Strict UTF-8 character for Peso to ensure Samsung Browser compatibility
-        const PESO_SYM = "\u20B1"; 
         const phFormat = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
 
+        // Storage Logic
         const DB_NAME = "FileStorage";
         const STORE_NAME = "handles";
-
         async function getDB() {
             return new Promise((resolve) => {
                 const request = indexedDB.open(DB_NAME, 1);
@@ -211,19 +186,15 @@
                 request.onsuccess = (e) => resolve(e.target.result);
             });
         }
-
         async function saveHandle(handle) {
             const dbObj = await getDB();
-            const tx = dbObj.transaction(STORE_NAME, "readwrite");
-            tx.objectStore(STORE_NAME).put(handle, "last_handle");
+            dbObj.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(handle, "last_handle");
         }
-
         async function loadHandle() {
             const dbObj = await getDB();
             return new Promise((resolve) => {
                 const request = dbObj.transaction(STORE_NAME).objectStore(STORE_NAME).get("last_handle");
                 request.onsuccess = () => resolve(request.result);
-                request.onerror = () => resolve(null);
             });
         }
 
@@ -232,14 +203,11 @@
             const storedHandle = await loadHandle();
             if (storedHandle) {
                 fileHandle = storedHandle;
-                // On mobile/Samsung, we prompt the user to re-verify if handle exists
                 document.getElementById('statusText').innerText = "TAP 'CONNECT' TO RE-SYNC FILE";
             }
-            ['rateDigi', 'rateMP2', 'rateStock'].forEach(id => {
-                if(localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id);
-            });
         };
 
+        // UI Interactions
         function formatInputAmount(input) {
             let value = input.value.replace(/[^0-9.]/g, '');
             const parts = value.split('.');
@@ -252,7 +220,6 @@
 
         async function openMasterFile() {
             try {
-                // Check if browser supports modern File API
                 if (window.showOpenFilePicker) {
                     [fileHandle] = await window.showOpenFilePicker({
                         types: [{ description: 'Excel', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }],
@@ -262,19 +229,13 @@
                     const permission = await fileHandle.requestPermission({mode: 'readwrite'});
                     if (permission === 'granted') loadFile();
                 } else {
-                    // Fallback for older Samsung Browser versions
-                    alert("Your browser version has limited file sync support. Use Chrome or update Samsung Internet for best results.");
+                    alert("Sync not supported on this browser. Opening file in View-Only mode.");
                     const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.xlsx';
+                    input.type = 'file'; input.accept = '.xlsx';
                     input.onchange = (e) => {
-                        const file = e.target.files[0];
                         const reader = new FileReader();
-                        reader.onload = (event) => {
-                            processData(event.target.result);
-                            document.getElementById('statusText').innerText = `Viewing: ${file.name}`;
-                        };
-                        reader.readAsArrayBuffer(file);
+                        reader.onload = (event) => processData(event.target.result);
+                        reader.readAsArrayBuffer(e.target.files[0]);
                     };
                     input.click();
                 }
@@ -291,7 +252,7 @@
                 document.getElementById('submitBtn').disabled = false;
                 document.getElementById('submitBtn').className = "w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-sm uppercase";
                 document.getElementById('submitBtn').innerText = "ADD TO LIST";
-            } catch (err) { alert("File Load Error: Ensure Excel is not open in another app."); }
+            } catch (err) { alert("Error loading file."); }
         }
 
         function processData(contents) {
@@ -325,8 +286,8 @@
                         <td class="p-3 text-right font-mono ${isExp ? 'text-rose-500' : 'text-emerald-400'}">${isExp ? '-' : '+'}${phFormat.format(amt).replace('PHP', '').trim()}</td>
                         <td class="p-3 text-right">
                             <div class="flex gap-2 justify-end action-btn">
-                                <button onclick="editItem(${index})" class="text-blue-400 p-1">✎</button>
-                                <button onclick="deleteItem(${index})" class="text-rose-500 p-1">✕</button>
+                                <button onclick="editItem(${index})" class="text-blue-400 p-2">✎</button>
+                                <button onclick="deleteItem(${index})" class="text-rose-500 p-2">✕</button>
                             </div>
                         </td>
                     </tr>`;
@@ -339,33 +300,71 @@
 
             const netTotal = totalRunningInc - totalRunningExp;
             document.getElementById('statNet').innerText = phFormat.format(netTotal);
-            document.getElementById('statNet').className = `text-2xl font-mono mt-1 ${netTotal < 0 ? 'text-rose-500' : 'text-emerald-400'}`;
-            
-            const poolValue = Math.max(0, netTotal);
-            document.getElementById('poolMax').innerText = phFormat.format(poolValue);
-            
-            const rates = [
-                {id: 'yieldDigi', val: parseFloat(document.getElementById('rateDigi').value)},
-                {id: 'yieldMP2', val: parseFloat(document.getElementById('rateMP2').value)},
-                {id: 'yieldStock', val: parseFloat(document.getElementById('rateStock').value)}
-            ];
+            document.getElementById('poolMax').innerText = phFormat.format(Math.max(0, netTotal));
+            document.getElementById('statExp').innerText = phFormat.format(curInc - curExp);
+            document.getElementById('statPrevYear').innerText = phFormat.format(prevYrInc - prevYrExp);
 
-            rates.forEach(r => {
-                document.getElementById(r.id).innerText = `+${phFormat.format(poolValue * (r.val/100))}`;
-            });
-            
-            const curFlow = curInc - curExp;
-            document.getElementById('statExp').innerText = phFormat.format(curFlow);
-            document.getElementById('statExp').className = `text-2xl font-mono mt-1 ${curFlow < 0 ? 'text-rose-500' : 'text-emerald-400'}`;
-            
-            const prevFlow = prevYrInc - prevYrExp;
-            document.getElementById('statPrevYear').innerText = phFormat.format(prevFlow);
+            const poolVal = Math.max(0, netTotal);
+            document.getElementById('yieldDigi').innerText = `+${phFormat.format(poolVal * (parseFloat(document.getElementById('rateDigi').value)/100))}`;
             
             updateChart(cats);
         }
 
+        // ROLLED BACK FUNCTIONS
+        function editItem(index) {
+            const item = db[index];
+            document.getElementById('date').value = item.Date;
+            document.getElementById('category').value = item.Category;
+            const amtInput = document.getElementById('amount');
+            amtInput.value = item.Amount;
+            formatInputAmount(amtInput);
+            document.getElementById('type').value = item.Type;
+            document.getElementById('editIndex').value = index;
+            document.getElementById('submitBtn').innerText = "UPDATE ENTRY";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('txForm').reset();
+            document.getElementById('editIndex').value = "-1";
+            document.getElementById('submitBtn').innerText = "ADD TO LIST";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+            document.getElementById('date').valueAsDate = new Date();
+        }
+
+        function deleteItem(index) {
+            const item = db[index];
+            document.getElementById('delInfoDate').innerText = item.Date;
+            document.getElementById('delInfoCategory').innerText = item.Category;
+            document.getElementById('delInfoAmount').innerText = phFormat.format(item.Amount);
+            document.getElementById('deleteTargetIndex').value = index;
+            document.getElementById('deleteModalOverlay').classList.remove('hidden');
+        }
+
+        function confirmDelete() {
+            const index = document.getElementById('deleteTargetIndex').value;
+            db.splice(index, 1);
+            hasUnsavedChanges = true;
+            updateUI();
+            refreshSyncState();
+            closeDeleteModal();
+        }
+
+        function closeDeleteModal() { document.getElementById('deleteModalOverlay').classList.add('hidden'); }
+
+        document.getElementById('txForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const amt = document.getElementById('amount').value.replace(/,/g, '');
+            const entry = { Date: document.getElementById('date').value, Category: document.getElementById('category').value, Amount: parseFloat(amt), Type: document.getElementById('type').value };
+            
+            const editIdx = parseInt(document.getElementById('editIndex').value);
+            if(editIdx > -1) { db[editIdx] = entry; } else { db.push(entry); }
+            
+            hasUnsavedChanges = true; updateUI(); refreshSyncState(); resetForm();
+        });
+
         async function saveToDisk() {
-            if (db.length === 0) return;
             try {
                 const ws = XLSX.utils.json_to_sheet(db);
                 const wb = XLSX.utils.book_new();
@@ -376,80 +375,51 @@
                     const writable = await fileHandle.createWritable();
                     await writable.write(wbout);
                     await writable.close();
-                    alert("Changes Saved Successfully!");
+                    alert("Saved Successfully!");
+                    window.location.reload();
                 } else {
-                    // Fallback for Mobile: Download the file if direct writing is blocked
                     const blob = new Blob([wbout], {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "Financial_Update.xlsx";
-                    a.click();
-                    alert("Mobile Security Note: Direct sync is limited on this browser. A new version of your Excel file has been downloaded to your 'Downloads' folder.");
+                    a.href = url; a.download = "Finance_Update.xlsx"; a.click();
+                    alert("Download started as browser sync is unavailable.");
                 }
                 hasUnsavedChanges = false;
                 refreshSyncState();
-            } catch (err) { 
-                alert("Permission error. Ensure the Excel file is not currently open in another app."); 
-            }
+            } catch (err) { alert("Permission denied. Close the file if open elsewhere."); }
         }
-
-        // --- Keep existing helper functions (resetForm, deleteItem, etc.) but update refreshSyncState ---
 
         function refreshSyncState() {
             const btn = document.getElementById('syncBtn');
-            if (hasUnsavedChanges) {
-                btn.disabled = false;
-                btn.className = "bg-rose-600 text-white px-6 py-2 rounded-full font-bold text-sm sync-warning";
-            } else {
-                btn.disabled = true;
-                btn.className = "bg-slate-800 text-slate-500 px-6 py-2 rounded-full font-bold text-sm border border-slate-700 opacity-50";
-            }
-        }
-
-        function limitAndRefresh(el) { if (el.value.length > 3) el.value = el.value.slice(0, 3); updateUI(); }
-        function toggleRateEdit() {
-            const inputs = [document.getElementById('rateDigi'), document.getElementById('rateMP2'), document.getElementById('rateStock')];
-            const isEditing = !inputs[0].disabled;
-            inputs.forEach(input => input.disabled = isEditing);
-            document.getElementById('rateEditBtn').innerText = isEditing ? "Edit Rates" : "Lock Rates";
-            if(isEditing) inputs.forEach(i => localStorage.setItem(i.id, i.value));
+            btn.disabled = !hasUnsavedChanges;
+            btn.className = hasUnsavedChanges ? "bg-rose-600 text-white px-6 py-2 rounded-full font-bold text-sm sync-warning" : "bg-slate-800 text-slate-500 px-6 py-2 rounded-full font-bold text-sm border border-slate-700 opacity-50";
         }
 
         function handleCategoryChange(select) {
-            if (select.value === "NEW_CAT") {
-                document.getElementById('modalOverlay').classList.remove('hidden');
-                document.getElementById('modalInput').focus();
-            }
+            if (select.value === "NEW_CAT") document.getElementById('modalOverlay').classList.remove('hidden');
         }
-
         function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); document.getElementById('category').value = ""; }
         function confirmNewCategory() {
             const name = document.getElementById('modalInput').value.trim();
             if (name) {
-                const opt = document.createElement("option");
-                opt.value = name; opt.text = name;
+                const opt = document.createElement("option"); opt.value = name; opt.text = name;
                 document.getElementById('category').add(opt);
                 document.getElementById('category').value = name;
                 document.getElementById('modalOverlay').classList.add('hidden');
             }
         }
-
         function setupFilters() {
             const curY = new Date().getFullYear();
-            const yearSelect = document.getElementById('filterYear');
-            let years = [...new Set(db.map(item => new Date(item.Date).getFullYear()))];
+            const years = [...new Set(db.map(item => new Date(item.Date).getFullYear()))];
             if (!years.includes(curY)) years.push(curY);
-            yearSelect.innerHTML = years.sort((a,b)=>b-a).map(y => `<option value="${y}">${y}</option>`).join('');
-            yearSelect.value = curY;
+            document.getElementById('filterYear').innerHTML = years.sort((a,b)=>b-a).map(y => `<option value="${y}">${y}</option>`).join('');
+            document.getElementById('filterYear').value = curY;
             document.getElementById('filterMonth').value = new Date().getMonth();
         }
-
         function updateCategoryDropdown() {
             const cats = [...new Set(db.map(item => item.Category))].filter(Boolean).sort();
             document.getElementById('category').innerHTML = `<option value="" disabled selected>Select Category</option><option value="NEW_CAT" class="text-emerald-500">+ Add New</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join('');
         }
-
         function updateChart(catData) {
             const ctx = document.getElementById('mainChart').getContext('2d');
             if(chartInstance) chartInstance.destroy();
@@ -459,16 +429,12 @@
                 options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
             });
         }
-
-        document.getElementById('txForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const amt = document.getElementById('amount').value.replace(/,/g, '');
-            const entry = { Date: document.getElementById('date').value, Category: document.getElementById('category').value, Amount: parseFloat(amt), Type: document.getElementById('type').value };
-            db.push(entry);
-            hasUnsavedChanges = true; updateUI(); refreshSyncState();
-            document.getElementById('txForm').reset();
-            document.getElementById('date').valueAsDate = new Date();
-        });
+        function toggleRateEdit() {
+            const inp = document.getElementById('rateDigi');
+            inp.disabled = !inp.disabled;
+            document.getElementById('rateEditBtn').innerText = inp.disabled ? "Edit Rates" : "Lock Rates";
+        }
+        function limitAndRefresh(el) { if (el.value.length > 3) el.value = el.value.slice(0, 3); updateUI(); }
     </script>
 </body>
 </html>

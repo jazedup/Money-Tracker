@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Analytics</title>
+    <title>PH Finance - Analytics & Yield Pool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        #modalOverlay, #deleteModalOverlay { transition: opacity 0.3s ease; }
+        #modalOverlay, #deleteModalOverlay { transition: opacity 0.3s many; }
         .action-btn { opacity: 0; transition: opacity 0.2s; }
         tr:hover .action-btn { opacity: 1; }
         #syncBtn { min-width: 120px; justify-content: center; }
@@ -21,7 +21,6 @@
         }
         .sync-warning { animation: pulse-red 2s infinite; }
         select { cursor: pointer; padding-right: 2.5rem !important; }
-        /* Updated Rate Input Styling */
         .rate-input { 
             background: transparent; 
             border-bottom: 1px dashed #334155; 
@@ -84,23 +83,20 @@
                 <div class="flex flex-col">
                     <label class="text-[10px] font-bold text-slate-500 mb-1 uppercase">Year</label>
                     <select id="filterYear" onchange="updateUI()" class="bg-slate-800 border-none rounded-lg p-2 pr-7 text-sm text-white outline-none w-32 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em;">
-                    <option value="2026">2026</option>
+                        <option value="2026">2026</option>
                     </select>
                 </div>
                 <div class="flex flex-col">
                     <label class="text-[10px] font-bold text-slate-500 mb-1 uppercase">Month</label>
                     <select id="filterMonth" onchange="updateUI()" class="bg-slate-800 border-none rounded-lg p-2 pr-8 text-sm text-white outline-none w-40 appearance-none" style="background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1em;">
-                    <option value="all">Full Year (All)</option>
-                    <option value="0">January</option><option value="1">February</option>
-                    <option value="2">March</option><option value="3">April</option>
-                    <option value="4">May</option><option value="5">June</option>
-                    <option value="6">July</option><option value="7">August</option>
-                    <option value="8">September</option><option value="9">October</option>
-                    <option value="10">November</option><option value="11">December</option>
+                        <option value="all">Full Year (All)</option>
+                        <option value="0">January</option><option value="1">February</option>
+                        <option value="2">March</option><option value="3">April</option>
+                        <option value="4">May</option><option value="5">June</option>
+                        <option value="6">July</option><option value="7">August</option>
+                        <option value="8">September</option><option value="9">October</option>
+                        <option value="10">November</option><option value="11">December</option>
                     </select>
-                </div>
-                <div class="ml-auto text-right">
-                    <div id="lastSaved" class="text-[10px] text-emerald-500 font-mono font-bold"></div>
                 </div>
             </div>
         </header>
@@ -153,7 +149,6 @@
                                 <span id="yieldStock" class="font-mono text-emerald-500">+₱0.00</span>
                             </div>
                         </div>
-                        <p class="text-[9px] text-slate-600 italic">Estimated annual passive gains based on PH market 2026 performance.</p>
                     </div>
                 </section>
             </div>
@@ -232,16 +227,30 @@
             });
         }
 
+        async function verifyPermission(handle, readWrite) {
+            const options = {};
+            if (readWrite) options.mode = 'readwrite';
+            if ((await handle.queryPermission(options)) === 'granted') return true;
+            if ((await handle.requestPermission(options)) === 'granted') return true;
+            return false;
+        }
+
         window.onload = async () => {
             document.getElementById('date').valueAsDate = new Date();
             const storedHandle = await loadHandle();
+            
             if (storedHandle) {
                 fileHandle = storedHandle;
-                const permission = await fileHandle.queryPermission({mode: 'readwrite'});
-                if (permission === 'granted') {
-                    loadFile();
-                } else {
-                    document.getElementById('statusText').innerText = "RESTORED: CLICK 'CONNECT' TO VERIFY ACCESS";
+                try {
+                    // Browsers require a user gesture to prompt, so this handles background verification
+                    const isPermitted = await fileHandle.queryPermission({mode: 'readwrite'}) === 'granted';
+                    if (isPermitted) {
+                        await loadFile();
+                    } else {
+                        document.getElementById('statusText').innerText = "RESTORED: CLICK 'CONNECT' TO ALLOW EDITING";
+                    }
+                } catch (e) {
+                    document.getElementById('statusText').innerText = "CLICK 'CONNECT' TO RESTORE SESSION";
                 }
             }
             if(localStorage.getItem('rateDigi')) document.getElementById('rateDigi').value = localStorage.getItem('rateDigi');
@@ -249,46 +258,15 @@
             if(localStorage.getItem('rateStock')) document.getElementById('rateStock').value = localStorage.getItem('rateStock');
         };
 
-        function limitAndRefresh(el) {
-            if (el.value.length > 3) el.value = el.value.slice(0, 3);
-            updateUI();
-        }
-
-        function toggleRateEdit() {
-            const inputs = [document.getElementById('rateDigi'), document.getElementById('rateMP2'), document.getElementById('rateStock')];
-            const btn = document.getElementById('rateEditBtn');
-            const isEditing = !inputs[0].disabled;
-
-            inputs.forEach(input => {
-                input.disabled = isEditing;
-                if(!isEditing) input.classList.add('border-emerald-500');
-                else input.classList.remove('border-emerald-500');
-            });
-
-            if(!isEditing) {
-                btn.innerText = "Lock Rates";
-                btn.classList.add('text-emerald-500');
-            } else {
-                btn.innerText = "Edit Rates";
-                btn.classList.remove('text-emerald-500');
-                localStorage.setItem('rateDigi', inputs[0].value);
-                localStorage.setItem('rateMP2', inputs[1].value);
-                localStorage.setItem('rateStock', inputs[2].value);
-            }
-        }
-
-        function formatInputAmount(input) {
-            let value = input.value.replace(/[^0-9.]/g, '');
-            const parts = value.split('.');
-            if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
-            if (value !== "") {
-                let formatted = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                input.value = (parts.length > 1) ? formatted + "." + parts[1].substring(0, 2) : formatted;
-            } else { input.value = ""; }
-        }
-
         async function openMasterFile() {
             try {
+                if (fileHandle) {
+                    const isPermitted = await verifyPermission(fileHandle, true);
+                    if (isPermitted) {
+                        await loadFile();
+                        return;
+                    }
+                }
                 [fileHandle] = await window.showOpenFilePicker({
                     types: [{ description: 'Excel', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }],
                     multiple: false
@@ -296,7 +274,7 @@
                 await saveHandle(fileHandle);
                 const permission = await fileHandle.requestPermission({mode: 'readwrite'});
                 if (permission === 'granted') loadFile();
-            } catch (err) { console.log("Picker closed"); }
+            } catch (err) { console.log("Picker closed or access denied"); }
         }
 
         async function loadFile() {
@@ -319,90 +297,16 @@
             } catch (err) { 
                 statusEl.innerText = `Disconnected`;
                 statusEl.classList.replace('text-emerald-500', 'text-red-500');
-                alert("File Load Error: Ensure Excel is closed."); 
+                alert("File Load Error: Ensure Excel is closed and permissions granted."); 
             }
-        }
-
-        function updateCategoryDropdown() {
-            const catSelect = document.getElementById('category');
-            const uniqueCategories = [...new Set(db.map(item => item.Category))].filter(Boolean).sort();
-            catSelect.innerHTML = `<option value="" disabled selected>Select Category</option><option value="NEW_CAT" class="text-emerald-500 font-bold">+ Add New Category</option>` + uniqueCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-        }
-
-        function handleCategoryChange(select) {
-            if (select.value === "NEW_CAT") {
-                document.getElementById('modalOverlay').classList.remove('hidden');
-                document.getElementById('modalInput').focus();
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('modalOverlay').classList.add('hidden');
-            document.getElementById('category').value = "";
-            document.getElementById('modalInput').value = "";
-        }
-
-        function confirmNewCategory() {
-            const select = document.getElementById('category');
-            const newName = document.getElementById('modalInput').value.trim();
-            if (newName !== "") {
-                const option = document.createElement("option");
-                option.value = newName; option.text = newName;
-                select.add(option);
-                select.value = newName;
-                document.getElementById('modalOverlay').classList.add('hidden');
-            }
-        }
-
-        function deleteItem(index) {
-            const item = db[index];
-            const isExp = item.Type?.toLowerCase() === 'expense';
-            const amt = parseFloat(item.Amount) || 0;
-            document.getElementById('delInfoDate').innerText = item.Date;
-            document.getElementById('delInfoCategory').innerText = item.Category;
-            document.getElementById('delInfoAmount').innerText = (isExp ? '-' : '+') + amt.toLocaleString('en-PH', {minimumFractionDigits: 2});
-            document.getElementById('delInfoAmount').className = `text-xl font-mono font-black ${isExp ? 'text-rose-500' : 'text-emerald-400'}`;
-            document.getElementById('deleteTargetIndex').value = index;
-            document.getElementById('deleteModalOverlay').classList.remove('hidden');
-        }
-
-        function closeDeleteModal() { document.getElementById('deleteModalOverlay').classList.add('hidden'); }
-
-        function confirmDelete() {
-            const index = document.getElementById('deleteTargetIndex').value;
-            db.splice(index, 1);
-            hasUnsavedChanges = true;
-            updateUI();
-            refreshSyncState();
-            closeDeleteModal();
-        }
-
-        function setupFilters() {
-            const now = new Date();
-            const curY = now.getFullYear();
-            const curM = now.getMonth();
-            const yearSelect = document.getElementById('filterYear');
-            let years = [...new Set(db.map(item => new Date(item.Date).getFullYear()))];
-            if (!years.includes(curY)) years.push(curY);
-            yearSelect.innerHTML = years.sort((a,b)=>b-a).map(y => `<option value="${y}">${y}</option>`).join('');
-            yearSelect.value = curY;
-            document.getElementById('filterMonth').value = curM;
         }
 
         function updateUI() {
             const year = parseInt(document.getElementById('filterYear').value);
             const monthVal = document.getElementById('filterMonth').value;
             const body = document.getElementById('tableBody'); body.innerHTML = '';
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            const currentLabel = monthVal === "all" ? `Full ${year}` : `${monthNames[monthVal]} ${year}`;
-            const comparisonLabel = monthVal === "all" ? `Full ${year - 1}` : `${monthNames[monthVal]} ${year - 1}`;
             
-            document.getElementById('labelNet').innerText = `Net Cash Flow: Total History`;
-            document.getElementById('labelExp').innerText = `Cash Flow: ${currentLabel}`;
-            document.getElementById('labelPrev').innerText = `Prev Cash Flow: ${comparisonLabel}`;
-
-            let curExp = 0, curInc = 0, cats = {}, prevYrExp = 0, prevYrInc = 0;
-            let totalRunningInc = 0, totalRunningExp = 0;
+            let curExp = 0, curInc = 0, cats = {}, totalRunningInc = 0, totalRunningExp = 0;
             
             db.forEach((item, index) => {
                 const d = new Date(item.Date), iY = d.getFullYear(), iM = d.getMonth();
@@ -414,75 +318,94 @@
                         <td class="p-3 text-slate-500 text-[10px]">${item.Date}</td>
                         <td class="p-3 font-bold text-slate-300">${item.Category}</td>
                         <td class="p-3 text-right font-mono ${isExp ? 'text-rose-500' : 'text-emerald-400'}">${isExp ? '-' : '+'}${amt.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
-                        <td class="p-3 text-right w-16">
-                            <div class="flex gap-2 justify-end action-btn">
-                                <button onclick="editItem(${index})" class="text-blue-400 hover:text-blue-300">✎</button>
-                                <button onclick="deleteItem(${index})" class="text-rose-500 hover:text-rose-400">✕</button>
-                            </div>
-                        </td>
+                        <td class="p-3 text-right w-16"><div class="flex gap-2 justify-end action-btn"><button onclick="editItem(${index})" class="text-blue-400">✎</button><button onclick="deleteItem(${index})" class="text-rose-500">✕</button></div></td>
                     </tr>`;
                     body.insertAdjacentHTML('afterbegin', row);
-                }
-                if (iY === year - 1 && (monthVal === "all" || iM === parseInt(monthVal))) {
-                    isExp ? prevYrExp += amt : prevYrInc += amt;
                 }
             });
 
             const netCashTotal = totalRunningInc - totalRunningExp;
             document.getElementById('statNet').innerText = phFormat.format(netCashTotal);
-            document.getElementById('statNet').className = `text-2xl font-mono mt-1 ${netCashTotal < 0 ? 'text-rose-500' : 'text-emerald-400'}`;
+            document.getElementById('poolMax').innerText = phFormat.format(Math.max(0, netCashTotal));
             
-            const poolValue = Math.max(0, netCashTotal);
-            document.getElementById('poolMax').innerText = phFormat.format(poolValue);
+            const rates = [parseFloat(document.getElementById('rateDigi').value), parseFloat(document.getElementById('rateMP2').value), parseFloat(document.getElementById('rateStock').value)];
+            const pool = Math.max(0, netCashTotal);
+            document.getElementById('yieldDigi').innerText = `+${phFormat.format(pool * (rates[0]/100))}`;
+            document.getElementById('yieldMP2').innerText = `+${phFormat.format(pool * (rates[1]/100))}`;
+            document.getElementById('yieldStock').innerText = `+${phFormat.format(pool * (rates[2]/100))}`;
             
-            const rD = parseFloat(document.getElementById('rateDigi').value) / 100 || 0;
-            const rM = parseFloat(document.getElementById('rateMP2').value) / 100 || 0;
-            const rS = parseFloat(document.getElementById('rateStock').value) / 100 || 0;
-
-            document.getElementById('yieldDigi').innerText = `+${phFormat.format(poolValue * rD)}`;
-            document.getElementById('yieldMP2').innerText = `+${phFormat.format(poolValue * rM)}`;
-            document.getElementById('yieldStock').innerText = `+${phFormat.format(poolValue * rS)}`;
-            
-            const curFlow = curInc - curExp;
-            document.getElementById('statExp').innerText = phFormat.format(curFlow);
-            document.getElementById('statExp').className = `text-2xl font-mono mt-1 ${curFlow < 0 ? 'text-rose-500' : 'text-emerald-400'}`;
-            const prevFlow = prevYrInc - prevYrExp;
-            document.getElementById('statPrevYear').innerText = phFormat.format(prevFlow);
-            document.getElementById('statPrevYear').className = `text-2xl font-mono mt-1 ${prevFlow < 0 ? 'text-rose-500' : 'text-emerald-400'}`;
-
-            const indicator = document.getElementById('yoYIndicator');
-            if (prevYrInc > 0 || prevYrExp > 0) {
-                const diff = ((curFlow - prevFlow) / (Math.abs(prevFlow) || 1)) * 100;
-                indicator.classList.remove('hidden');
-                let symbol = curFlow > prevFlow ? "▲" : (curFlow < prevFlow ? "▼" : "▬");
-                let colorClass = curFlow > prevFlow ? "bg-emerald-500/20 text-emerald-500" : (curFlow < prevFlow ? "bg-rose-500/20 text-rose-500" : "bg-slate-500/20 text-slate-400");
-                indicator.innerHTML = `<span title="Comparison from Previous">${symbol} ${Math.abs(diff).toFixed(1)}%</span>`;
-                indicator.className = `text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center ${colorClass} cursor-help`;
-            } else { indicator.classList.add('hidden'); }
-            
+            document.getElementById('statExp').innerText = phFormat.format(curInc - curExp);
             updateChart(cats);
         }
+
+        // Standard Utility Functions
+        function formatInputAmount(input) {
+            let value = input.value.replace(/[^0-9.]/g, '');
+            const parts = value.split('.');
+            if (value !== "") {
+                input.value = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (parts.length > 1 ? "." + parts[1].substring(0, 2) : "");
+            }
+        }
+
+        function limitAndRefresh(el) { if (el.value.length > 3) el.value = el.value.slice(0, 3); updateUI(); }
+
+        function toggleRateEdit() {
+            const inputs = [document.getElementById('rateDigi'), document.getElementById('rateMP2'), document.getElementById('rateStock')];
+            const isEditing = !inputs[0].disabled;
+            inputs.forEach(i => i.disabled = isEditing);
+            document.getElementById('rateEditBtn').innerText = isEditing ? "Edit Rates" : "Lock Rates";
+            if(isEditing) {
+                localStorage.setItem('rateDigi', inputs[0].value);
+                localStorage.setItem('rateMP2', inputs[1].value);
+                localStorage.setItem('rateStock', inputs[2].value);
+            }
+        }
+
+        function updateCategoryDropdown() {
+            const catSelect = document.getElementById('category');
+            const uniqueCategories = [...new Set(db.map(item => item.Category))].filter(Boolean).sort();
+            catSelect.innerHTML = `<option value="" disabled selected>Select Category</option><option value="NEW_CAT" class="text-emerald-500 font-bold">+ Add New Category</option>` + uniqueCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        }
+
+        function handleCategoryChange(select) { if (select.value === "NEW_CAT") { document.getElementById('modalOverlay').classList.remove('hidden'); document.getElementById('modalInput').focus(); } }
+        function closeModal() { document.getElementById('modalOverlay').classList.add('hidden'); document.getElementById('category').value = ""; }
+        function confirmNewCategory() {
+            const name = document.getElementById('modalInput').value.trim();
+            if (name) {
+                const opt = document.createElement("option"); opt.value = name; opt.text = name;
+                document.getElementById('category').add(opt); document.getElementById('category').value = name;
+                document.getElementById('modalOverlay').classList.add('hidden');
+            }
+        }
+
+        function deleteItem(index) {
+            const item = db[index];
+            document.getElementById('delInfoCategory').innerText = item.Category;
+            document.getElementById('delInfoAmount').innerText = parseFloat(item.Amount).toLocaleString('en-PH');
+            document.getElementById('deleteTargetIndex').value = index;
+            document.getElementById('deleteModalOverlay').classList.remove('hidden');
+        }
+        function closeDeleteModal() { document.getElementById('deleteModalOverlay').classList.add('hidden'); }
+        function confirmDelete() { db.splice(document.getElementById('deleteTargetIndex').value, 1); hasUnsavedChanges = true; updateUI(); refreshSyncState(); closeDeleteModal(); }
 
         function editItem(index) {
             const item = db[index];
             document.getElementById('date').value = item.Date;
             document.getElementById('category').value = item.Category;
-            const amtInput = document.getElementById('amount');
-            amtInput.value = item.Amount;
-            formatInputAmount(amtInput);
+            document.getElementById('amount').value = item.Amount;
             document.getElementById('type').value = item.Type;
             document.getElementById('editIndex').value = index;
             document.getElementById('submitBtn').innerText = "UPDATE ENTRY";
             document.getElementById('cancelEditBtn').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function resetForm() {
-            document.getElementById('txForm').reset();
-            document.getElementById('editIndex').value = "-1";
-            document.getElementById('submitBtn').innerText = "ADD TO LIST";
-            document.getElementById('cancelEditBtn').classList.add('hidden');
-            document.getElementById('date').valueAsDate = new Date();
+        function resetForm() { document.getElementById('txForm').reset(); document.getElementById('editIndex').value = "-1"; document.getElementById('submitBtn').innerText = "ADD TO LIST"; document.getElementById('cancelEditBtn').classList.add('hidden'); document.getElementById('date').valueAsDate = new Date(); }
+
+        function setupFilters() {
+            const years = [...new Set(db.map(item => new Date(item.Date).getFullYear()))];
+            document.getElementById('filterYear').innerHTML = years.sort((a,b)=>b-a).map(y => `<option value="${y}">${y}</option>`).join('');
+            document.getElementById('filterYear').value = new Date().getFullYear();
+            document.getElementById('filterMonth').value = new Date().getMonth();
         }
 
         function updateChart(catData) {
@@ -491,46 +414,45 @@
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: { labels: Object.keys(catData), datasets: [{ data: Object.values(catData), backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'], borderWidth: 4, borderColor: '#0f172a' }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { color: '#64748b', font: { size: 10 }, usePointStyle: true, pointStyle: 'rect' } } } }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { color: '#64748b', font: { size: 10 }, usePointStyle: true } } } }
             });
         }
 
         function refreshSyncState() {
             const btn = document.getElementById('syncBtn');
-            if (!fileHandle) { btn.disabled = true; return; }
             if (hasUnsavedChanges) {
                 btn.disabled = false;
-                btn.className = "bg-rose-600 hover:bg-rose-500 text-white px-6 py-2 rounded-full font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-rose-900/40 sync-warning cursor-pointer";
+                btn.className = "bg-rose-600 text-white px-6 py-2 rounded-full font-bold text-sm sync-warning cursor-pointer";
             } else {
                 btn.disabled = true;
-                btn.className = "bg-slate-800 text-slate-500 px-6 py-2 rounded-full font-bold text-sm transition-all border border-slate-700 flex items-center gap-2 opacity-50 cursor-not-allowed";
+                btn.className = "bg-slate-800 text-slate-500 px-6 py-2 rounded-full font-bold text-sm opacity-50";
             }
         }
 
         document.getElementById('txForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            const finalCat = document.getElementById('category').value;
-            if (!finalCat) return;
-            const rawAmount = document.getElementById('amount').value.replace(/,/g, '');
-            const entry = { Date: document.getElementById('date').value, Category: finalCat, Amount: parseFloat(rawAmount), Type: document.getElementById('type').value };
-            const editIdx = parseInt(document.getElementById('editIndex').value);
-            if(editIdx > -1) { db[editIdx] = entry; } else { db.push(entry); }
-            hasUnsavedChanges = true; 
-            updateCategoryDropdown(); updateUI(); refreshSyncState(); resetForm();
+            const entry = { 
+                Date: document.getElementById('date').value, 
+                Category: document.getElementById('category').value, 
+                Amount: parseFloat(document.getElementById('amount').value.replace(/,/g, '')), 
+                Type: document.getElementById('type').value 
+            };
+            const idx = parseInt(document.getElementById('editIndex').value);
+            if(idx > -1) db[idx] = entry; else db.push(entry);
+            hasUnsavedChanges = true; updateUI(); refreshSyncState(); resetForm();
         });
 
         async function saveToDisk() {
             if (!fileHandle || !hasUnsavedChanges) return;
             try {
+                if (!(await verifyPermission(fileHandle, true))) return;
                 const ws = XLSX.utils.json_to_sheet(db), wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
                 const writable = await fileHandle.createWritable();
-                await writable.write(wbout); await writable.close();
-                hasUnsavedChanges = false; 
-                refreshSyncState();
-                window.location.reload();
-            } catch (err) { alert("Permission error. Ensure Excel is closed."); }
+                await writable.write(XLSX.write(wb, { bookType: 'xlsx', type: 'array' }));
+                await writable.close();
+                hasUnsavedChanges = false; refreshSyncState(); window.location.reload();
+            } catch (err) { alert("Save failed. Ensure file is closed."); }
         }
     </script>
 </body>

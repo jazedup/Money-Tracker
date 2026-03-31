@@ -489,10 +489,10 @@
             modal.classList.remove('hidden'); inputWrap.classList.add('hidden'); btn.classList.remove('bg-rose-600', 'bg-emerald-600');
             if(type === 'password') {
                 title.innerText = "Change Key"; title.className = "text-2xl font-black text-emerald-500 mb-2 uppercase italic tracking-tighter";
-                desc.innerText = "Update your database access password immediately."; inputWrap.classList.remove('hidden'); btn.innerText = "Update Password"; btn.classList.add('bg-emerald-600'); btn.onclick = executePassChange;
+                desc.innerText = "Update your database access password."; inputWrap.classList.remove('hidden'); btn.innerText = "Update Password"; btn.classList.add('bg-emerald-600'); btn.onclick = executePassChange;
             } else if (type === 'account') {
                 title.innerText = "Terminate Account"; title.className = "text-2xl font-black text-rose-500 mb-2 uppercase italic tracking-tighter";
-                desc.innerText = "IRREVERSIBLE: Delete your profile, password, and all data from the vault."; btn.innerText = "Destroy Everything"; btn.classList.add('bg-rose-600'); btn.onclick = executeAccountDelete;
+                desc.innerText = "IRREVERSIBLE: Delete all account data."; btn.innerText = "Destroy Everything"; btn.classList.add('bg-rose-600'); btn.onclick = executeAccountDelete;
             }
         }
 

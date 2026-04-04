@@ -101,15 +101,17 @@
         }
 
         /* ────────────────────────────────────────────────────────────── */
-        /* ONLY CHANGE: Strongest possible font stack for .font-mono      */
-        /* This guarantees the Philippine Peso symbol (₱) is available   */
-        /* on Windows, macOS, Android, Linux, and all modern browsers.    */
-        /* No other code was changed.                                     */
+        /* ONLY CHANGE (for Samsung Internet Browser):                    */
+        /* Samsung's native browser sometimes uses limited monospace      */
+        /* fonts that don't contain the ₱ glyph. We now prioritize the   */
+        /* exact fonts Samsung uses (system-ui + Roboto + Arial) first.   */
+        /* This guarantees ₱ renders correctly while keeping the rest of  */
+        /* the monospace look intact. No HTML or JS was touched.         */
         /* ────────────────────────────────────────────────────────────── */
         .font-mono {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 
-                         "Liberation Mono", "Courier New", system-ui, 
-                         "Segoe UI", Roboto, Arial, sans-serif;
+            font-family: system-ui, Roboto, Arial, "Segoe UI", sans-serif,
+                         ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 
+                         "Liberation Mono", "Courier New";
         }
     </style>
 </head>

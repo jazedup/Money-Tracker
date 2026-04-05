@@ -100,18 +100,12 @@
             pointer-events: auto;
         }
 
-        /* ────────────────────────────────────────────────────────────── */
-        /* ONLY CHANGE (for Samsung Internet Browser):                    */
-        /* Samsung's native browser sometimes uses limited monospace      */
-        /* fonts that don't contain the ₱ glyph. We now prioritize the   */
-        /* exact fonts Samsung uses (system-ui + Roboto + Arial) first.   */
-        /* This guarantees ₱ renders correctly while keeping the rest of  */
-        /* the monospace look intact. No HTML or JS was touched.         */
-        /* ────────────────────────────────────────────────────────────── */
-        .font-mono {
-            font-family: system-ui, Roboto, Arial, "Segoe UI", sans-serif,
-                         ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 
-                         "Liberation Mono", "Courier New";
+        /* NEW: Glowing emerald border for edit mode - only appears when editing */
+        #logEntrySection.edit-mode {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.4),
+                        0 0 20px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s ease;
         }
     </style>
 </head>
@@ -190,7 +184,8 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
             <div class="lg:col-span-1 flex flex-col gap-6 h-full">
-                <section class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex-1 flex flex-col">
+                <!-- Log Entry section with ID and glowing edit indicator -->
+                <section id="logEntrySection" class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex-1 flex flex-col">
                     <h2 class="text-lg font-bold mb-4 text-emerald-500 uppercase tracking-tight">Log Entry</h2>
                     <form id="txForm" class="space-y-4 flex-grow flex flex-col justify-between">
                         <div class="space-y-4">
@@ -713,6 +708,11 @@
             document.getElementById('date').value = item.Date; document.getElementById('category').value = item.Category;
             document.getElementById('amount').value = item.Amount.toLocaleString(); document.getElementById('type').value = item.Type;
             document.getElementById('editId').value = id; document.getElementById('submitBtn').innerText = "Update Entry";
+            
+            // NEW: Activate glowing emerald border when entering edit mode
+            const logSection = document.getElementById('logEntrySection');
+            if (logSection) logSection.classList.add('edit-mode');
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -722,6 +722,10 @@
             document.getElementById('category').value = ""; 
             document.getElementById('submitBtn').innerText = "Add Entry"; 
             document.getElementById('date').valueAsDate = new Date();
+            
+            // NEW: Remove glowing edit border when returning to add mode
+            const logSection = document.getElementById('logEntrySection');
+            if (logSection) logSection.classList.remove('edit-mode');
         }
 
         function formatInputAmount(input) {

@@ -585,10 +585,15 @@
             
             currentUser = null;
             
-            // Smooth transition: hide loading screen (in case it was visible), hide dashboard, show login
+            // Smooth transition + clear username & password fields (as requested)
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('mainDashboard').classList.add('hidden');
             document.getElementById('authOverlay').classList.remove('hidden');
+            
+            // Clear login form fields
+            document.getElementById('authUsername').value = '';
+            document.getElementById('authPass').value = '';
+            document.getElementById('authError').classList.add('hidden');
         }
 
         function initDataSync(username) {

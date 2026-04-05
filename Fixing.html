@@ -549,7 +549,13 @@
             await window.fb.set(window.fb.ref(window.fb.db_fb, `users/${currentUser}/password`), newPass);
             closeAccountModal(); toggleSettingsModal();
         }
-        async function executeAccountDelete() { await window.fb.remove(window.fb.ref(window.fb.db_fb, `users/${currentUser}`)); handleLogout(); }
+        
+        // NEW FEATURE: After account deletion, automatically return to login modal
+        async function executeAccountDelete() {
+            await window.fb.remove(window.fb.ref(window.fb.db_fb, `users/${currentUser}`));
+            closeAccountModal();   // ensure modal is closed first
+            handleLogout();        // then go straight to clean login screen
+        }
         
         function openDeleteModal(id) { pendingDeleteId = id; document.getElementById('deleteTxModal').classList.remove('hidden'); }
         function closeDeleteModal() { pendingDeleteId = null; document.getElementById('deleteTxModal').classList.add('hidden'); }
@@ -585,12 +591,10 @@
             
             currentUser = null;
             
-            // Smooth transition + clear username & password fields (as requested)
             document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('mainDashboard').classList.add('hidden');
             document.getElementById('authOverlay').classList.remove('hidden');
             
-            // Clear login form fields
             document.getElementById('authUsername').value = '';
             document.getElementById('authPass').value = '';
             document.getElementById('authError').classList.add('hidden');

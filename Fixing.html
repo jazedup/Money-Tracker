@@ -583,8 +583,14 @@
             localStorage.removeItem('finance_session');
             localStorage.removeItem('finance_user');
             
-            // Clean reload - no manual UI toggle (prevents flashing)
-            location.reload();
+            currentUser = null;
+            
+            // Minimal UI switch + immediate reload (prevents any flash while guaranteeing logout)
+            document.getElementById('mainDashboard').classList.add('hidden');
+            document.getElementById('authOverlay').classList.remove('hidden');
+            
+            // Tiny delay ensures DOM update before reload
+            setTimeout(() => location.reload(), 10);
         }
 
         function initDataSync(username) {

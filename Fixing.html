@@ -585,12 +585,10 @@
             
             currentUser = null;
             
-            // Minimal UI switch + immediate reload (prevents any flash while guaranteeing logout)
+            // Smooth transition: hide loading screen (in case it was visible), hide dashboard, show login
+            document.getElementById('loadingScreen').classList.add('hidden');
             document.getElementById('mainDashboard').classList.add('hidden');
             document.getElementById('authOverlay').classList.remove('hidden');
-            
-            // Tiny delay ensures DOM update before reload
-            setTimeout(() => location.reload(), 10);
         }
 
         function initDataSync(username) {

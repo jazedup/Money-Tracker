@@ -5,7 +5,6 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -31,13 +30,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Inject API Keys
+        run: |
+          sed -i 's|FIREBASE_API_KEY|${{ secrets.FIREBASE_API_KEY }}|g' AI_analytics.html
+          sed -i 's|YOUR_GEMINI_API_KEY_HERE|${{ secrets.GEMINI_API_KEY }}|g' AI_analytics.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
           path: '.'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

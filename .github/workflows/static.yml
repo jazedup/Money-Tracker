@@ -21,13 +21,15 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
 
       - name: Inject API Keys
         run: |
-          sed -i 's|FIREBASE_API_KEY_HERE|${{ secrets.FIREBASE_API_KEY }}|g' AI_analytics.html
+          sed -i 's|FIREBASE_API_KEY|${{ secrets.FIREBASE_API_KEY }}|g' AI_analytics.html
           sed -i 's|GEMINI_API_KEY|${{ secrets.GEMINI_API_KEY }}|g' AI_analytics.html
 
       - name: Setup Pages

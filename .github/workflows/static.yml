@@ -33,7 +33,7 @@ jobs:
 
       - name: Inject API Keys
         run: |
-          sed -i 's|FIREBASE_API_KEY_HERE|${{ secrets.FIREBASE_API_KEY }}|g' AI_analytics.html
+          sed -i 's|FIREBASE_API_KEY|${{ secrets.FIREBASE_API_KEY }}|g' AI_analytics.html
           sed -i 's|GEMINI_API_KEY|${{ secrets.GEMINI_API_KEY }}|g' AI_analytics.html
 
       - name: Setup Pages

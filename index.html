@@ -12,8 +12,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, remove, update, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        const GEMINI_API_KEY = "GEMINI_API_KEY";
-
         const firebaseConfig = {
             apiKey: "FIREBASE_API_KEY",
             authDomain: "finance-dashboard-11987.firebaseapp.com",
@@ -29,7 +27,7 @@
         const db_fb = getDatabase(app);
 
         window.fb = { db_fb, ref, set, onValue, push, remove, update, get, child };
-        window.GEMINI_API_KEY = GEMINI_API_KEY;
+        window.GEMINI_API_KEY = "GEMINI_API_KEY";
     </script>
 
     <style>
@@ -1158,9 +1156,6 @@
             const totalExp = expenses.reduce((a, c) => a + parseFloat(c.Amount), 0);
             const totalProfit = profits.reduce((a, c) => a + parseFloat(c.Amount), 0);
 
-            const biggestIncome = profits.length ? profits.reduce((a, b) => parseFloat(a.Amount) > parseFloat(b.Amount) ? a : b) : null;
-            const biggestExpense = expenses.length ? expenses.reduce((a, b) => parseFloat(a.Amount) > parseFloat(b.Amount) ? a : b) : null;
-
             const expCats = {};
             expenses.forEach(t => { expCats[t.Category] = (expCats[t.Category] || 0) + parseFloat(t.Amount); });
             const profCats = {};
@@ -1200,51 +1195,89 @@
             const prevMonthFlow = prevMonthIncome - prevMonthExp;
             const prevYearFlow = prevYearIncome - prevYearExp;
 
-            const prompt = `You are a personal finance AI analyst. Analyze this financial data for ${periodLabel} and provide a concise, practical analysis.
+            const savingsRate = totalProfit > 0 ? ((curFlow / totalProfit) * 100).toFixed(1) : '0';
+            const expenseRatio = totalProfit > 0 ? ((totalExp / totalProfit) * 100).toFixed(1) : '0';
+            const txCount = filtered.length;
+            const avgTxAmount = txCount > 0 ? (totalExp / Math.max(expenses.length, 1)).toFixed(2) : '0';
 
-PERIOD: ${periodLabel}
-TOTAL INCOME: ₱${totalProfit.toFixed(2)}
-TOTAL EXPENSES: ₱${totalExp.toFixed(2)}
-NET CASH FLOW: ₱${curFlow.toFixed(2)}
-TOTAL TRANSACTIONS: ${filtered.length}
+            const prompt = `You are a personal finance AI analyst. Analyze the financial data below and respond ONLY with a valid JSON object — no markdown, no backticks, no extra text.
 
-BIGGEST SINGLE INCOME: ${biggestIncome ? `₱${parseFloat(biggestIncome.Amount).toFixed(2)} (${biggestIncome.Category} on ${biggestIncome.Date})` : 'None'}
-BIGGEST SINGLE EXPENSE: ${biggestExpense ? `₱${parseFloat(biggestExpense.Amount).toFixed(2)} (${biggestExpense.Category} on ${biggestExpense.Date})` : 'None'}
+=== FINANCIAL DATA FOR ${periodLabel} ===
+Total Income: ₱${totalProfit.toFixed(2)}
+Total Expenses: ₱${totalExp.toFixed(2)}
+Net Cash Flow: ₱${curFlow.toFixed(2)}
+Savings Rate: ${savingsRate}%
+Expense-to-Income Ratio: ${expenseRatio}%
+Total Transactions: ${txCount} (${profits.length} income, ${expenses.length} expense)
+Average Expense Transaction: ₱${avgTxAmount}
 
-INCOME BY CATEGORY:
-${sortedProfCats.map(([cat, amt]) => `- ${cat}: ₱${amt.toFixed(2)} (${((amt/totalProfit)*100).toFixed(1)}%)`).join('\n') || 'None'}
+INCOME BY CATEGORY (sorted by amount):
+${sortedProfCats.map(([cat, amt], i) => `${i+1}. ${cat}: ₱${amt.toFixed(2)} (${totalProfit > 0 ? ((amt/totalProfit)*100).toFixed(1) : 0}% of income)`).join('\n') || 'None'}
 
-EXPENSES BY CATEGORY:
-${sortedExpCats.map(([cat, amt]) => `- ${cat}: ₱${amt.toFixed(2)} (${((amt/totalExp)*100).toFixed(1)}%)`).join('\n') || 'None'}
+EXPENSES BY CATEGORY (sorted by amount):
+${sortedExpCats.map(([cat, amt], i) => `${i+1}. ${cat}: ₱${amt.toFixed(2)} (${totalExp > 0 ? ((amt/totalExp)*100).toFixed(1) : 0}% of expenses)`).join('\n') || 'None'}
 
-COMPARISON DATA:
-${monthVal !== 'all' ? `Previous Month (${prevMonthLabel}): Income ₱${prevMonthIncome.toFixed(2)}, Expenses ₱${prevMonthExp.toFixed(2)}, Net ₱${prevMonthFlow.toFixed(2)}` : 'Previous Month: N/A (Full Year selected)'}
-Same Period Last Year (${prevYearLabel}): Income ₱${prevYearIncome.toFixed(2)}, Expenses ₱${prevYearExp.toFixed(2)}, Net ₱${prevYearFlow.toFixed(2)}
+COMPARISON:
+${monthVal !== 'all' ? `vs Previous Month (${prevMonthLabel}): Income ₱${prevMonthIncome.toFixed(2)}, Expenses ₱${prevMonthExp.toFixed(2)}, Net ₱${prevMonthFlow.toFixed(2)}` : 'vs Previous Month: N/A — Full Year view selected'}
+vs Same Period Last Year (${prevYearLabel}): Income ₱${prevYearIncome.toFixed(2)}, Expenses ₱${prevYearExp.toFixed(2)}, Net ₱${prevYearFlow.toFixed(2)}
 
-Respond ONLY with a valid JSON object (no markdown, no backticks) with this exact structure:
+=== REQUIRED JSON STRUCTURE ===
 {
-  "summary": "2-sentence overall financial health summary",
-  "biggestIncome": { "label": "category name", "amount": 0, "date": "YYYY-MM-DD", "note": "brief insight about this income" },
-  "biggestExpense": { "label": "category name", "amount": 0, "date": "YYYY-MM-DD", "note": "brief insight about this expense" },
+  "summary": "3-4 sentence detailed financial health summary. Include specific peso amounts, savings rate, and what it means for the user's financial position.",
+  "topIncome": [
+    { "label": "category", "amount": 0, "percentage": 0.0, "note": "1 sentence insight with specific numbers about this income source" },
+    { "label": "category", "amount": 0, "percentage": 0.0, "note": "..." },
+    { "label": "category", "amount": 0, "percentage": 0.0, "note": "..." }
+  ],
+  "topExpense": [
+    { "label": "category", "amount": 0, "percentage": 0.0, "note": "1 sentence insight with specific numbers about this expense" },
+    { "label": "category", "amount": 0, "percentage": 0.0, "note": "..." },
+    { "label": "category", "amount": 0, "percentage": 0.0, "note": "..." }
+  ],
   "spendingHabits": [
-    { "habit": "short habit description", "severity": "good|warning|danger" }
+    { "habit": "Specific habit observation with actual peso amounts and percentages from the data", "severity": "good|warning|danger" },
+    { "habit": "...", "severity": "good|warning|danger" },
+    { "habit": "...", "severity": "good|warning|danger" }
   ],
   "savingTips": [
-    "specific actionable tip based on the actual categories",
-    "another specific tip",
-    "a third tip"
+    "Concrete tip referencing an actual category and specific amount that could be reduced or optimized",
+    "Another specific tip with numbers",
+    "A third actionable tip"
   ],
   "efficiencyScore": 0,
   "comparison": {
-    "vsPrevMonth": { "incomeChange": 0, "expenseChange": 0, "netChange": 0, "insight": "1-sentence insight comparing current vs previous month cash flow" },
-    "vsPrevYear": { "incomeChange": 0, "expenseChange": 0, "netChange": 0, "insight": "1-sentence insight comparing current vs same period last year" }
+    "vsPrevMonth": {
+      "label": "${monthVal !== 'all' ? prevMonthLabel : 'N/A'}",
+      "incomeChange": 0,
+      "incomePct": 0.0,
+      "expenseChange": 0,
+      "expensePct": 0.0,
+      "netChange": 0,
+      "netPct": 0.0,
+      "insight": "1-2 sentence insight with specific amounts comparing this period vs previous month"
+    },
+    "vsPrevYear": {
+      "label": "${prevYearLabel}",
+      "incomeChange": 0,
+      "incomePct": 0.0,
+      "expenseChange": 0,
+      "expensePct": 0.0,
+      "netChange": 0,
+      "netPct": 0.0,
+      "insight": "1-2 sentence insight with specific amounts comparing this period vs same period last year"
+    }
   }
 }
-efficiencyScore = (totalIncome - totalExpenses) / totalIncome * 100, clamped 0-100. If no income, set 0.
-spendingHabits: max 3, based on actual expense categories.
-savingTips: max 3, specific to actual categories in the data.
-comparison.vsPrevMonth.incomeChange = currentIncome - prevMonthIncome (positive = improved). If prevMonth is N/A, set all to 0 and insight to "Full Year view selected — month-over-month comparison unavailable."
-comparison.vsPrevYear: same logic vs same period last year. If no prior year data, set all to 0 and insight to "No data available for ${prevYearLabel}."`;
+
+RULES:
+- efficiencyScore = (totalIncome - totalExpenses) / totalIncome * 100, clamped 0–100. Set 0 if no income.
+- topIncome: list top 3 income categories by amount. If fewer than 3 exist, only include what exists.
+- topExpense: list top 3 expense categories by amount. If fewer than 3 exist, only include what exists.
+- spendingHabits: exactly 3 habits with real peso figures from the data.
+- comparison.vsPrevMonth: if Full Year view, set all numeric fields to 0 and insight to "Full Year view selected — month-over-month comparison is unavailable."
+- comparison.vsPrevYear: if no prior year data, set all numeric fields to 0 and insight to "No transactions found for ${prevYearLabel}."
+- incomeChange = currentIncome - prevIncome. expenseChange = currentExpenses - prevExpenses. netChange = currentNet - prevNet.
+- incomePct/expensePct/netPct = percentage change vs prior period (0 if prior value was 0).`;
 
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${window.GEMINI_API_KEY}`, {
@@ -1252,7 +1285,7 @@ comparison.vsPrevYear: same logic vs same period last year. If no prior year dat
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.4, maxOutputTokens: 1000 }
+                        generationConfig: { temperature: 0.3, maxOutputTokens: 2000 }
                     })
                 });
 
@@ -1276,7 +1309,6 @@ comparison.vsPrevYear: same logic vs same period last year. If no prior year dat
         }
 
         function renderAIIntel(ai, periodLabel) {
-            // Set period label (user-requested change)
             document.getElementById('aiIntelPeriodLabel').innerText = periodLabel;
 
             // Overview
@@ -1285,55 +1317,99 @@ comparison.vsPrevYear: same logic vs same period last year. If no prior year dat
             // Efficiency Score
             const score = Math.max(0, Math.min(100, ai.efficiencyScore || 0));
             const arc = document.getElementById('efficiencyArc');
-            const circumference = 239;
-            const offset = circumference - (score / 100 * circumference);
-            arc.style.strokeDashoffset = offset;
+            arc.style.strokeDashoffset = 239 - (score / 100 * 239);
             document.getElementById('efficiencyScore').innerText = score.toFixed(0);
             document.getElementById('efficiencyLabel').innerText = score >= 70 ? 'Excellent' : score >= 50 ? 'Good' : score >= 30 ? 'Fair' : 'Needs Improvement';
 
-            // Top Income - now top 3
+            // Top 3 Income Sources
             const incomeEl = document.getElementById('aiTopIncome');
             incomeEl.innerHTML = '';
-            const topIncome = (ai.top_income || ai.biggestIncome ? [ai.biggestIncome] : []).concat(Array.isArray(ai.top_income) ? ai.top_income.slice(1) : []);
-            (topIncome.slice(0, 3)).forEach((item, i) => {
-                if (!item) return;
-                incomeEl.insertAdjacentHTML('beforeend', `
-                    <div class="flex items-start gap-3">
-                        <span class="text-[10px] font-black text-emerald-700 bg-emerald-900/20 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">${i+1}</span>
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-emerald-400 uppercase">${item.label || item.category} <span class="text-emerald-300 font-mono">+₱${phFormat.format(item.amount)}</span></p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">${item.note || item.insight || ''}</p>
-                        </div>
-                    </div>`);
-            });
-            if (incomeEl.children.length === 0) incomeEl.innerHTML = '<p class="text-slate-600 text-[10px]">No income data for this period.</p>';
+            const topIncome = Array.isArray(ai.topIncome) ? ai.topIncome.slice(0, 3) : [];
+            if (topIncome.length === 0) {
+                incomeEl.innerHTML = '<p class="text-slate-600 text-[10px]">No income data for this period.</p>';
+            } else {
+                topIncome.forEach((item, i) => {
+                    if (!item) return;
+                    incomeEl.insertAdjacentHTML('beforeend', `
+                        <div class="flex items-start gap-3">
+                            <span class="text-[10px] font-black text-emerald-700 bg-emerald-900/20 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">${i+1}</span>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-xs font-black text-emerald-400 uppercase truncate">${item.label}</p>
+                                    <span class="text-emerald-300 font-mono text-xs font-black shrink-0">+₱${phFormat.format(item.amount)}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <div class="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-emerald-500 rounded-full" style="width:${Math.min(item.percentage,100)}%"></div>
+                                    </div>
+                                    <span class="text-[10px] text-emerald-600 font-bold shrink-0">${item.percentage?.toFixed(1)}%</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">${item.note || ''}</p>
+                            </div>
+                        </div>`);
+                });
+            }
 
-            // Top Expense - now top 3
+            // Top 3 Expense Sources
             const expEl = document.getElementById('aiTopExpense');
             expEl.innerHTML = '';
-            const topExpense = (ai.top_expense || ai.biggestExpense ? [ai.biggestExpense] : []).concat(Array.isArray(ai.top_expense) ? ai.top_expense.slice(1) : []);
-            (topExpense.slice(0, 3)).forEach((item, i) => {
-                if (!item) return;
-                expEl.insertAdjacentHTML('beforeend', `
-                    <div class="flex items-start gap-3">
-                        <span class="text-[10px] font-black text-rose-700 bg-rose-900/20 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">${i+1}</span>
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-rose-400 uppercase">${item.label || item.category} <span class="text-rose-300 font-mono">-₱${phFormat.format(item.amount)}</span></p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">${item.note || item.insight || ''}</p>
-                        </div>
-                    </div>`);
-            });
-            if (expEl.children.length === 0) expEl.innerHTML = '<p class="text-slate-600 text-[10px]">No expense data for this period.</p>';
+            const topExpense = Array.isArray(ai.topExpense) ? ai.topExpense.slice(0, 3) : [];
+            if (topExpense.length === 0) {
+                expEl.innerHTML = '<p class="text-slate-600 text-[10px]">No expense data for this period.</p>';
+            } else {
+                topExpense.forEach((item, i) => {
+                    if (!item) return;
+                    expEl.insertAdjacentHTML('beforeend', `
+                        <div class="flex items-start gap-3">
+                            <span class="text-[10px] font-black text-rose-700 bg-rose-900/20 rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 mt-0.5">${i+1}</span>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-xs font-black text-rose-400 uppercase truncate">${item.label}</p>
+                                    <span class="text-rose-300 font-mono text-xs font-black shrink-0">-₱${phFormat.format(item.amount)}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <div class="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-rose-500 rounded-full" style="width:${Math.min(item.percentage,100)}%"></div>
+                                    </div>
+                                    <span class="text-[10px] text-rose-600 font-bold shrink-0">${item.percentage?.toFixed(1)}%</span>
+                                </div>
+                                <p class="text-[10px] text-slate-500 mt-1">${item.note || ''}</p>
+                            </div>
+                        </div>`);
+                });
+            }
 
             // Spending Habits
+            const severityColor = { good: 'text-emerald-400', warning: 'text-amber-400', danger: 'text-rose-400' };
+            const severityIcon = { good: '✓', warning: '⚠', danger: '✕' };
             const habitsEl = document.getElementById('aiSpendingHabits');
-            habitsEl.innerHTML = (ai.spendingHabits || []).map(h => `
+            habitsEl.innerHTML = (ai.spendingHabits || []).map(h => {
+                const sev = typeof h === 'string' ? 'warning' : (h.severity || 'warning');
+                const text = typeof h === 'string' ? h : h.habit;
+                return `<div class="flex items-start gap-2">
+                    <span class="text-xs mt-0.5 flex-shrink-0 font-black ${severityColor[sev] || 'text-amber-400'}">${severityIcon[sev] || '→'}</span>
+                    <p class="${severityColor[sev] || 'text-amber-400'} font-semibold">${text}</p>
+                </div>`;
+            }).join('');
+
+            // Saving Tips
+            const tipsSection = document.getElementById('aiSpendingHabits').closest('.ai-section');
+            let tipsEl = document.getElementById('aiSavingTips');
+            if (!tipsEl) {
+                tipsSection.insertAdjacentHTML('afterend', `
+                    <div class="ai-section">
+                        <p class="ai-section-title text-teal-400">💡 Saving Tips</p>
+                        <div id="aiSavingTips" class="mt-2 text-xs text-slate-300 leading-relaxed space-y-2"></div>
+                    </div>`);
+                tipsEl = document.getElementById('aiSavingTips');
+            }
+            tipsEl.innerHTML = (ai.savingTips || []).map(tip => `
                 <div class="flex items-start gap-2">
-                    <span class="text-amber-500 text-xs mt-0.5 flex-shrink-0">→</span>
-                    <p>${typeof h === 'string' ? h : h.habit}</p>
+                    <span class="text-teal-500 text-xs mt-0.5 flex-shrink-0">→</span>
+                    <p>${tip}</p>
                 </div>`).join('');
 
-            // Compare & Contrast - detailed with amounts + percentages
+            // Compare & Contrast
             const compareEl = document.getElementById('aiCompareContrast');
             compareEl.innerHTML = '';
 
@@ -1346,37 +1422,34 @@ comparison.vsPrevYear: same logic vs same period last year. If no prior year dat
                 const incomeChange = data.incomeChange || 0;
                 const expenseChange = data.expenseChange || 0;
                 const netChange = data.netChange || 0;
-                const incomePct = incomeChange !== 0 ? ((incomeChange / Math.abs(incomeChange)) * 100).toFixed(1) : '0';
-                const expensePct = expenseChange !== 0 ? ((expenseChange / Math.abs(expenseChange)) * 100).toFixed(1) : '0';
-                const netPct = netChange !== 0 ? ((netChange / Math.abs(netChange)) * 100).toFixed(1) : '0';
+                const incomePct = typeof data.incomePct === 'number' ? Math.abs(data.incomePct).toFixed(1) : '—';
+                const expensePct = typeof data.expensePct === 'number' ? Math.abs(data.expensePct).toFixed(1) : '—';
+                const netPct = typeof data.netPct === 'number' ? Math.abs(data.netPct).toFixed(1) : '—';
+
+                const row = (title, change, pct, positiveIsGood = true) => {
+                    const up = change >= 0;
+                    const good = positiveIsGood ? up : !up;
+                    const color = change === 0 ? 'text-slate-500' : good ? 'text-emerald-400' : 'text-rose-400';
+                    const arrow = change === 0 ? '–' : up ? '▲' : '▼';
+                    return `
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400">${title}</span>
+                            <div class="text-right">
+                                <span class="font-mono ${color} font-bold">${change >= 0 ? '+' : ''}₱${phFormat.format(Math.abs(change))}</span>
+                                <span class="ml-2 text-[10px] ${color}">${arrow} ${pct}%</span>
+                            </div>
+                        </div>`;
+                };
 
                 return `
                 <div class="bg-slate-900/60 rounded-2xl p-4 border border-slate-700">
                     <p class="text-sky-400 text-xs font-black mb-3">vs ${label}</p>
                     <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-400">Income</span>
-                            <div class="text-right">
-                                <span class="font-mono text-emerald-400">${incomeChange >= 0 ? '+' : ''}₱${phFormat.format(Math.abs(incomeChange))}</span>
-                                <span class="ml-2 text-[10px] ${incomeChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${incomeChange >= 0 ? '▲' : '▼'} ${incomePct}%</span>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-400">Expense</span>
-                            <div class="text-right">
-                                <span class="font-mono text-rose-400">${expenseChange >= 0 ? '+' : ''}₱${phFormat.format(Math.abs(expenseChange))}</span>
-                                <span class="ml-2 text-[10px] ${expenseChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${expenseChange >= 0 ? '▲' : '▼'} ${expensePct}%</span>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-slate-400">Net Flow</span>
-                            <div class="text-right">
-                                <span class="font-mono ${netChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${netChange >= 0 ? '+' : ''}₱${phFormat.format(Math.abs(netChange))}</span>
-                                <span class="ml-2 text-[10px] ${netChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${netChange >= 0 ? '▲' : '▼'} ${netPct}%</span>
-                            </div>
-                        </div>
+                        ${row('Income', incomeChange, incomePct, true)}
+                        ${row('Expense', expenseChange, expensePct, false)}
+                        ${row('Net Flow', netChange, netPct, true)}
                     </div>
-                    <p class="text-slate-400 text-[11px] mt-3">${data.insight || ''}</p>
+                    <p class="text-slate-400 text-[11px] mt-3 leading-relaxed">${data.insight || ''}</p>
                 </div>`;
             }
 

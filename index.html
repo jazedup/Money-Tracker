@@ -13,7 +13,7 @@
         import { getDatabase, ref, set, onValue, push, remove, update, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
-            apiKey: "FIREBASE_API_KEY",
+            apiKey: "__FIREBASE_API_KEY__",
             authDomain: "finance-dashboard-11987.firebaseapp.com",
             databaseURL: "https://finance-dashboard-11987-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "finance-dashboard-11987",
@@ -23,10 +23,15 @@
             measurementId: "G-T46VZFN3WK"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db_fb = getDatabase(app);
-
-        window.fb = { db_fb, ref, set, onValue, push, remove, update, get, child };
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db_fb = getDatabase(app);
+            window.fb = { db_fb, ref, set, onValue, push, remove, update, get, child };
+        } catch (e) {
+            console.error('Firebase init error:', e);
+            window.fbInitError = e.message;
+            window.fb = { error: true };
+        }
     </script>
 
     <style>
@@ -669,21 +674,34 @@
 
         window.addEventListener('load', () => {
             initTheme();
-            const check = setInterval(() => {
-                if (window.fb) {
-                    clearInterval(check);
-                    document.getElementById('loadingScreen').classList.add('hidden');
-                    
-                    const savedSession = localStorage.getItem('finance_session');
-                    if (savedSession) {
-                        const session = JSON.parse(savedSession);
-                        if (Date.now() - session.lastActive < SESSION_TIMEOUT_MS) {
-                            currentUser = session.user;
-                            enterDashboard();
-                        } else {
-                            localStorage.removeItem('finance_session');
-                        }
+
+            function revealAuth() {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                if (window.fb?.error) {
+                    // Firebase failed — show auth overlay anyway, errors will surface on login attempt
+                    console.warn('Firebase unavailable:', window.fbInitError);
+                    return;
+                }
+                const savedSession = localStorage.getItem('finance_session');
+                if (savedSession) {
+                    const session = JSON.parse(savedSession);
+                    if (Date.now() - session.lastActive < SESSION_TIMEOUT_MS) {
+                        currentUser = session.user;
+                        enterDashboard();
+                    } else {
+                        localStorage.removeItem('finance_session');
                     }
+                }
+            }
+
+            // Hard timeout — show auth after 8 s no matter what
+            const fallback = setTimeout(revealAuth, 8000);
+
+            const check = setInterval(() => {
+                if (window.fb !== undefined) {
+                    clearInterval(check);
+                    clearTimeout(fallback);
+                    revealAuth();
                 }
             }, 100);
         });
@@ -1261,7 +1279,7 @@ comparison.vsPrevMonth.incomeChange = currentIncome - prevMonthIncome (positive 
 comparison.vsPrevYear: same logic vs same period last year. If no prior year data, set all to 0 and insight to "No data available for ${prevYearLabel}."`;
 
             try {
-                const GEMINI_API_KEY = 'GEMINI_API_KEY';
+                const GEMINI_API_KEY = '__GEMINI_API_KEY__';
 
                 if (!GEMINI_API_KEY || GEMINI_API_KEY === '__GEMINI_API_KEY__') {
                     document.getElementById('aiIntelLoading').classList.add('hidden');

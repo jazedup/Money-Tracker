@@ -13,7 +13,7 @@
         import { getDatabase, ref, set, onValue, push, remove, update, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
-            apiKey: "__FIREBASE_API_KEY__",
+            apiKey: "FIREBASE_API_KEY",
             authDomain: "finance-dashboard-11987.firebaseapp.com",
             databaseURL: "https://finance-dashboard-11987-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "finance-dashboard-11987",
@@ -23,19 +23,11 @@
             measurementId: "G-T46VZFN3WK"
         };
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            const db_fb = getDatabase(app);
-            window.fb = { db_fb, ref, set, onValue, push, remove, update, get, child };
-        } catch (e) {
-            console.error('Firebase init error:', e);
-            window.fbInitError = e.message;
-            window.fb = { error: true };
-        }
-    </script>
+        const app = initializeApp(firebaseConfig);
+        const db_fb = getDatabase(app);
 
-    <!-- Gemini key injected by GitHub Actions CI — do not edit this line manually -->
-    <script>window.GEMINI_KEY = '__GEMINI_API_KEY__';</script>
+        window.fb = { db_fb, ref, set, onValue, push, remove, update, get, child };
+    </script>
 
     <style>
         body { transition: background-color 0.4s ease; }
@@ -227,7 +219,7 @@
                     </button>
                     <button onclick="toggleSettingsModal()" class="p-3 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 rounded-xl transition-all shadow-lg group">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-90 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                     </button>
@@ -486,6 +478,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     Download Excel Report
                 </button>
+                <button onclick="openGeminiKeyModal(); toggleSettingsModal();" class="w-full bg-slate-800 hover:bg-violet-900/30 text-violet-400 hover:text-violet-300 py-4 rounded-xl font-bold text-xs border border-slate-700 hover:border-violet-800 transition-all uppercase flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                    Set Gemini API Key
+                </button>
                 <button onclick="openAccountModal('password'); toggleSettingsModal();" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-4 rounded-xl font-bold text-xs border border-slate-700 transition-all uppercase">Change Password</button>
                 <button onclick="openAccountModal('account'); toggleSettingsModal();" class="w-full bg-slate-800 hover:bg-rose-950 text-rose-500/70 hover:text-rose-500 py-4 rounded-xl font-bold text-xs border border-slate-700 transition-all uppercase">Delete Account</button>
                 <div class="pt-4"><button onclick="toggleSettingsModal()" class="w-full text-slate-500 hover:text-white font-black uppercase text-[10px] tracking-widest">Close Menu</button></div>
@@ -677,34 +673,21 @@
 
         window.addEventListener('load', () => {
             initTheme();
-
-            function revealAuth() {
-                document.getElementById('loadingScreen').classList.add('hidden');
-                if (window.fb?.error) {
-                    // Firebase failed — show auth overlay anyway, errors will surface on login attempt
-                    console.warn('Firebase unavailable:', window.fbInitError);
-                    return;
-                }
-                const savedSession = localStorage.getItem('finance_session');
-                if (savedSession) {
-                    const session = JSON.parse(savedSession);
-                    if (Date.now() - session.lastActive < SESSION_TIMEOUT_MS) {
-                        currentUser = session.user;
-                        enterDashboard();
-                    } else {
-                        localStorage.removeItem('finance_session');
-                    }
-                }
-            }
-
-            // Hard timeout — show auth after 8 s no matter what
-            const fallback = setTimeout(revealAuth, 8000);
-
             const check = setInterval(() => {
-                if (window.fb !== undefined) {
+                if (window.fb) {
                     clearInterval(check);
-                    clearTimeout(fallback);
-                    revealAuth();
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    
+                    const savedSession = localStorage.getItem('finance_session');
+                    if (savedSession) {
+                        const session = JSON.parse(savedSession);
+                        if (Date.now() - session.lastActive < SESSION_TIMEOUT_MS) {
+                            currentUser = session.user;
+                            enterDashboard();
+                        } else {
+                            localStorage.removeItem('finance_session');
+                        }
+                    }
                 }
             }, 100);
         });
@@ -1148,6 +1131,11 @@
         }
 
         function openAIIntelModal() {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) {
+                openGeminiKeyModal();
+                return;
+            }
             document.getElementById('aiIntelModal').classList.remove('hidden');
             document.getElementById('aiIntelLoading').classList.remove('hidden');
             document.getElementById('aiIntelResults').classList.add('hidden');
@@ -1282,9 +1270,9 @@ comparison.vsPrevMonth.incomeChange = currentIncome - prevMonthIncome (positive 
 comparison.vsPrevYear: same logic vs same period last year. If no prior year data, set all to 0 and insight to "No data available for ${prevYearLabel}."`;
 
             try {
-                const GEMINI_API_KEY = window.GEMINI_KEY || '';
+                const GEMINI_API_KEY = localStorage.getItem('gemini_api_key') || '';
 
-                if (!GEMINI_API_KEY || GEMINI_API_KEY.includes('__')) {
+                if (!GEMINI_API_KEY) {
                     document.getElementById('aiIntelLoading').classList.add('hidden');
                     document.getElementById('aiIntelError').classList.remove('hidden');
                     document.getElementById('aiIntelErrorMsg').innerText = "Gemini API Key Required. Go to Settings → Set Gemini API Key.";

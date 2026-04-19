@@ -167,6 +167,10 @@
             background: #1e293b; overflow: hidden;
         }
         .compare-bar-fill { height: 100%; border-radius: 999px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+
+        .ai-glow-btn:hover {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), 0 0 40px rgba(16, 185, 129, 0.3), 0 8px 16px rgba(16, 185, 129, 0.2);
+        }
     </style>
 </head>
 <body class="dark-mode text-slate-100 p-4 md:p-8">
@@ -233,7 +237,7 @@
             </div>
 
             <!-- Filter card + AI trigger button aligned on opposite sides -->
-            <div class="flex flex-col lg:flex-row items-end justify-between gap-6">
+            <div class="flex flex-col lg:flex-row items-center lg:items-end justify-center lg:justify-between gap-6">
                 <div class="flex flex-wrap items-center gap-4 bg-slate-900 p-4 rounded-2xl border border-slate-800 w-full lg:max-w-[350px]">
                     <div class="flex flex-col">
                         <label class="text-[10px] font-bold text-slate-500 mb-1 uppercase">Year</label>
@@ -254,7 +258,7 @@
                 </div>
 
                 <button onclick="openAIIntelModal()" 
-                        class="lg:ml-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-sm rounded-2xl shadow-lg shadow-emerald-900/20 flex items-center gap-3 whitespace-nowrap transition-all">
+                        class="ai-glow-btn lg:ml-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase text-sm rounded-2xl shadow-lg shadow-emerald-900/20 flex items-center gap-3 whitespace-nowrap transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
@@ -297,7 +301,7 @@
                         <div class="flex-grow flex flex-col justify-center space-y-6">
                             <div>
                                 <p class="text-[10px] text-slate-500 uppercase font-black">Max Investable Amount</p>
-                                <p id="poolMax" class="text-2xl font-mono text-white font-black">₱0.00</p>
+                                <p class="text-2xl font-mono text-white mt-1"><span class="text-slate-500 mr-1">₱</span><span id="poolMax" class="inline-block">0.00</span></p>
                             </div>
                             <div class="space-y-3 pt-4 border-t border-slate-800">
                                 <div class="flex justify-between text-xs">
@@ -885,7 +889,7 @@
                 document.getElementById('statPrevYear').innerHTML = smartAmt(prevFlow, { prefix: '' });
                 const investable = totalNet > 0 ? totalNet : 0;
                 const rD = (parseFloat(document.getElementById('rateDigi').value) || 0) / 100, rM = (parseFloat(document.getElementById('rateMP2').value) || 0) / 100, rS = (parseFloat(document.getElementById('rateStock').value) || 0) / 100;
-                document.getElementById('poolMax').innerHTML = smartAmt(investable);
+                document.getElementById('poolMax').innerHTML = smartAmt(investable, { prefix: '' });
                 document.getElementById('yieldDigi').innerHTML = smartAmt(investable * rD);
                 document.getElementById('yieldMP2').innerHTML = smartAmt(investable * rM);
                 document.getElementById('yieldStock').innerHTML = smartAmt(investable * rS);
